@@ -1,0 +1,501 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
+} from 'recharts';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronDown, Shield, TrendingUp, Users, AlertTriangle, BarChart2, Zap, Clock, Cpu, Activity, User, MessageSquare } from 'lucide-react';
+
+ --- CSS for Custom Animations (Siren & Electric Line) ---
+const customStyles = `
+  @keyframes spin-slow {
+    from { transform rotate(0deg); }
+    to { transform rotate(360deg); }
+  }
+  @keyframes electricity-flow {
+    from { stroke-dashoffset 24; }
+    to { stroke-dashoffset 0; }
+  }
+   The Rotating Siren Light Effect 
+  .siren-sweep {
+    background conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(136, 19, 55, 0.4) 40deg, transparent 90deg);
+    animation spin-slow 6s linear infinite;
+    filter blur(40px);
+  }
+   The Electric Line Class targeted by Recharts (The Moving Line) 
+  .electric-line path {
+    stroke-dasharray 12 6;  Dashed line for electric effect 
+    animation electricity-flow 1s linear infinite;  Movement along the line 
+    filter drop-shadow(0 0 5px #fb7185) drop-shadow(0 0 10px #be123c);  Neon Glow 
+    stroke-linecap round;
+  }
+`;
+
+ --- Operational Timeline Data (Adapted to Business Services Narrative) ---
+const data = [
+  { hour '0600', incidents 5, service_tickets 120 },
+  { hour '0900', incidents 8, service_tickets 185 },
+  { hour '1200', incidents 12, service_tickets 350 },
+  { hour '1500', incidents 7, service_tickets 240 },
+  { hour '1800', incidents 10, service_tickets 300 },
+  { hour '2100', incidents 4, service_tickets 150 },
+  { hour '2359', incidents 2, service_tickets 90 },
+];
+
+ --- Theme Constants ---
+const BURGUNDY_HEX = '#881337';  rose-900
+const LIGHT_RED_HEX = '#fb7185';  rose-400
+const NEON_WHITE = '#ffe4e6';  rose-50
+
+ --- Internal Components for Structure and Readability ---
+
+ 1. Live Log Feed Component
+const LogFeed = () = {
+  const [logs, setLogs] = useState([
+    { time '235812', level 'CRIT', message 'Auth flow breach attempt detected.', color 'text-red-500' },
+    { time '235901', level 'WARN', message 'High utilization alert (CPU 98%) on NODE_7.', color 'text-yellow-500' },
+    { time '000015', level 'INFO', message 'System health check passed (A-7).', color 'text-emerald-500' },
+    { time '000145', level 'EVENT', message 'User T-821 initiated System Reboot sequence.', color 'text-rose-500' },
+    { time '000211', level 'INFO', message 'Service Finance Ledger synchronized.', color 'text-neutral-400' },
+  ]);
+
+   Simulate new logs arriving
+  useEffect(() = {
+    const timer = setInterval(() = {
+      const newLog = {
+        time new Date().toTimeString().slice(0, 8),
+        level 'INFO',
+        message `Heartbeat check successful on Cluster ${Math.floor(Math.random()  9) + 1}.`,
+        color 'text-neutral-400',
+      };
+      setLogs(prevLogs = [newLog, ...prevLogs.slice(0, 4)]);
+    }, 5000);
+    return () = clearInterval(timer);
+  }, []);
+
+  return (
+    div className=
+      p-5 bg-neutral-90060 rounded-2xl border border-rose-90040
+      shadow-[0_0_20px_-5px_rgba(136,19,55,0.3)] flex flex-col h-72 lgh-[420px]
+    
+      h3 className=flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-rose-300 mb-4
+        Activity size={16} className=text-rose-500  Live Operational Log
+      h3
+      div className=flex-grow overflow-y-auto font-mono text-xs custom-scrollbar
+        {logs.map((log, index) = (
+          motion.div
+            key={log.time + index}
+            initial={{ opacity 0, y -10 }}
+            animate={{ opacity 1, y 0 }}
+            transition={{ duration 0.3 }}
+            className={`py-1.5 border-b border-white5 lastborder-b-0 ${log.color}`}
+          
+            span className=text-neutral-600 mr-2[ {log.time} ]span
+            span className={`font-bold mr-2 ${log.color}`}{log.level}span
+            {log.message}
+          motion.div
+        ))}
+        { Placeholder for scrollbar styling }
+        style jsx=true{`
+          .custom-scrollbar-webkit-scrollbar {
+            width 4px;
+          }
+          .custom-scrollbar-webkit-scrollbar-thumb {
+            background-color ${BURGUNDY_HEX};
+            border-radius 4px;
+          }
+          .custom-scrollbar-webkit-scrollbar-track {
+            background #111;
+          }
+        `}style
+      div
+    div
+  );
+};
+
+ 2. Key Performance Indicator (KPI) Status Panel
+const KpiStatusPanel = () = {
+  const kpis = [
+    { name 'System Uptime', value '99.99%', status 'Operational', icon Clock, color 'text-emerald-400' },
+    { name 'Average Latency', value '15ms', status 'Optimal', icon Zap, color 'text-rose-400' },
+    { name 'Resource Load', value '62%', status 'Nominal', icon Cpu, color 'text-yellow-400' },
+    { name 'Client Feedback', value '8.910', status 'High', icon MessageSquare, color 'text-cyan-400' },
+  ];
+
+  return (
+    div className=grid grid-cols-2 mdgrid-cols-4 gap-4
+      {kpis.map((kpi, i) = (
+        div 
+          key={i} 
+          className=relative p-4 rounded-xl bg-neutral-90060 border border-white10 overflow-hidden hoverbg-neutral-80070 transition-all duration-300
+        
+          { Neon corner accent }
+          div className={`absolute top-0 left-0 w-2 h-2 rounded-br-lg ${kpi.color.replace('text-', 'bg-')} opacity-30 blur-sm`} 
+
+          div className=flex items-center justify-between mb-3
+            kpi.icon size={18} className={kpi.color} 
+            span className={`text-[10px] uppercase font-bold ${kpi.color}`}{kpi.status}span
+          div
+          div className=text-xl font-bold font-mono text-white mb-0.5{kpi.value}div
+          p className=text-xs text-neutral-400{kpi.name}p
+        div
+      ))}
+    div
+  );
+};
+
+ 3. Quick ActionActive Users Panel
+const QuickActionPanel = () = {
+  const users = [
+    { id 'T-821', role 'Security Analyst', online true },
+    { id 'F-099', role 'Finance Controller', online true },
+    { id 'S-404', role 'Support Agent', online false },
+    { id 'A-113', role 'Admin', online true },
+    { id 'M-300', role 'Marketing Lead', online false },
+  ];
+  return (
+    div className=
+      p-5 bg-neutral-90060 rounded-2xl border border-rose-90040
+      shadow-[0_0_20px_-5px_rgba(136,19,55,0.3)] flex flex-col
+    
+      h3 className=flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-neutral-300 mb-4
+        User size={16} className=text-neutral-500  Active Personnel
+      h3
+      div className=space-y-3
+        {users.map((user, i) = (
+          div key={i} className=flex items-center justify-between p-3 rounded-lg bg-neutral-80050 hoverbg-neutral-800 transition-colors
+            div className=flex items-center gap-3
+              div className={`w-3 h-3 rounded-full ${user.online  'bg-emerald-500 shadow-emerald-50050'  'bg-red-500 shadow-red-50050'} blur-[1px]`} 
+              div
+                span className=font-mono text-sm font-semibold text-white{user.id}span
+                p className=text-xs text-neutral-500{user.role}p
+              div
+            div
+            span className={`text-[10px] uppercase font-bold ${user.online  'text-emerald-300'  'text-red-300'}`}
+              {user.online  'Online'  'Offline'}
+            span
+          div
+        ))}
+      div
+    div
+  );
+};
+
+
+ Main Application Component
+const App = () = {
+  const [graphType, setGraphType] = useState('line');  'line' or 'bar'
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  const handleSelect = (type) = {
+    setGraphType(type);
+    setIsDropdownOpen(false);
+  };
+
+  return (
+    
+      style{customStyles}style
+      { Ensures the component fills the entire viewport, establishing the page theme }
+      div className=min-h-screen w-full bg-black flex items-start justify-center p-4 font-sans text-neutral-200 selectionbg-rose-900 selectiontext-white overflow-y-auto
+        
+        { MAIN GRID CONTAINER - Now wider and using a 12-column grid layout on large screens }
+        div className=w-full max-w-6xl grid grid-cols-1 lggrid-cols-12 gap-6 mt-8 mb-8
+            
+            { --- LEFT COLUMN Main Dashboard Content (Charts, KPIs, Orbital Metrics) --- }
+            div className=lgcol-span-8 flex flex-col gap-6
+
+                { MAIN CARD HEADER & CHARTS (Existing Content, now wrapped) }
+                div className=
+                    relative w-full
+                    rounded-3xl 
+                    bg-neutral-95080 backdrop-blur-xl 
+                    border border-rose-90040
+                    shadow-[0_0_50px_-10px_rgba(136,19,55,0.3)]
+                    group
+                    overflow-hidden
+                
+                    { --- EFFECT LAYERS --- }
+                    { 1. The Rotating Siren Light (Behind content) }
+                    div className=absolute inset-[-50%] siren-sweep opacity-30 pointer-events-none z-0 
+                    { 2. Static Vignette to keep corners dark }
+                    div className=absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.8)_100%)] pointer-events-none z-0 
+                    { 3. Top Gloss Reflection }
+                    div className=absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-rose-40050 to-transparent z-20 
+                    
+                    { CONTENT WRAPPER }
+                    div className=relative z-10 p-6 mdp-8 flex flex-col gap-6
+                        
+                        { HEADER }
+                        div className=flex flex-col mdflex-row justify-between items-start mditems-center gap-4
+                            div
+                                div className=flex items-center gap-3 mb-1
+                                    div className=relative p-2 rounded-lg bg-black border border-rose-800 shadow-[0_0_15px_rgba(225,29,72,0.3)]
+                                        Shield size={18} className=text-rose-500 
+                                        div className=absolute inset-0 rounded-lg animate-pulse bg-rose-50010 
+                                    div
+                                    div
+                                        h2 className=text-2xl font-bold tracking-tight text-white drop-shadow-md
+                                            BLACKSTONEspan className=text-rose-500_OP_GRIDspan
+                                        h2
+                                        p className=text-xs text-neutral-500 mt-1Real-time Service Delivery Metricsp
+                                    div
+                                div
+                            div
+
+                            { DROPDOWN }
+                            div className=relative
+                                button
+                                    onClick={() = setIsDropdownOpen(!isDropdownOpen)}
+                                    className={`
+                                        relative overflow-hidden groupbtn
+                                        flex items-center gap-3 px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300
+                                        border backdrop-blur-md
+                                        ${isDropdownOpen 
+                                             'bg-rose-95090 border-rose-500 text-white shadow-[0_0_20px_rgba(225,29,72,0.4)]' 
+                                             'bg-black60 border-rose-90050 text-rose-10070 hoverborder-rose-50050 hovertext-white'
+                                        }
+                                    `}
+                                
+                                    { Button gloss effect }
+                                    div className=absolute inset-0 bg-gradient-to-b from-white10 to-transparent opacity-0 group-hoverbtnopacity-100 transition-opacity 
+                                    
+                                    {graphType === 'line'  TrendingUp size={16}   BarChart2 size={16} }
+                                    span className=capitalize z-10 relative{graphType === 'line'  'Incident Trend'  'Ticket Volume'}span
+                                    ChevronDown 
+                                        size={14} 
+                                        className={`transition-transform duration-300 z-10 ${isDropdownOpen  'rotate-180'  ''}`} 
+                                    
+                                button
+
+                                AnimatePresence
+                                    {isDropdownOpen && (
+                                        motion.div
+                                            initial={{ opacity 0, y 10, scale 0.95 }}
+                                            animate={{ opacity 1, y 0, scale 1 }}
+                                            exit={{ opacity 0, y 10, scale 0.95 }}
+                                            transition={{ duration 0.2, ease circOut }}
+                                            className=absolute right-0 mt-3 w-56 p-1.5 bg-black95 backdrop-blur-2xl border border-rose-80050 rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.8)] z-50 overflow-hidden
+                                        
+                                            {['line', 'bar'].map((type) = (
+                                                button
+                                                    key={type}
+                                                    onClick={() = handleSelect(type)}
+                                                    className={`
+                                                        relative w-full flex items-center justify-between px-4 py-3 text-sm rounded-xl transition-all groupitem overflow-hidden mb-1 lastmb-0
+                                                        ${graphType === type 
+                                                             'bg-rose-90030 text-white border border-rose-50030' 
+                                                             'text-neutral-400 hoverbg-white5 hovertext-rose-200'
+                                                        }
+                                                    `}
+                                                
+                                                    span className=flex items-center gap-3 relative z-10
+                                                        {type === 'line'  TrendingUp size={16}   BarChart2 size={16} }
+                                                        span className=capitalize{type === 'line'  'Security Incidents'  'Service Tickets'}span
+                                                    span
+                                                    {graphType === type && (
+                                                        motion.div layoutId=active-dot className=w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_10px_#f43f5e] 
+                                                    )}
+                                                button
+                                            ))}
+                                        motion.div
+                                    )}
+                                AnimatePresence
+                            div
+                        div
+
+                        { CHART CONTAINER }
+                        div className=
+                            relative w-full h-[350px] 
+                            bg-black40 rounded-2xl 
+                            border border-white5
+                            shadow-inner
+                            p-4 overflow-hidden
+                        
+                            { Grid Background pattern }
+                            div className=absolute inset-0 opacity-20 
+                                style={{ backgroundImage 'radial-gradient(#881337 1px, transparent 1px)', backgroundSize '20px 20px' }} 
+                            
+                            
+                            ResponsiveContainer width=100% height=100%
+                                {graphType === 'line'  (
+                                    LineChart data={data} margin={{ top 10, right 10, left -10, bottom 0 }}
+                                        defs
+                                            linearGradient id=glowGradient x1=0 y1=0 x2=0 y2=1
+                                                stop offset=0% stopColor={BURGUNDY_HEX} stopOpacity={0.5} 
+                                                stop offset=100% stopColor=transparent stopOpacity={0} 
+                                            linearGradient
+                                        defs
+                                        CartesianGrid strokeDasharray=3 3 stroke=#333 vertical={false} opacity={0.3} 
+                                        XAxis 
+                                            dataKey=hour 
+                                            stroke=#525252 
+                                            tick={{fontSize 11, fill '#a3a3a3', fontWeight 600}} 
+                                            tickLine={false}
+                                            axisLine={false}
+                                            dy={10}
+                                        
+                                        YAxis 
+                                            stroke=#525252 
+                                            tick={{fontSize 11, fill '#a3a3a3'}} 
+                                            tickLine={false}
+                                            axisLine={false}
+                                            label={{ value 'Incidents', angle -90, position 'insideLeft', fill '#a3a3a3', fontSize 11 }}
+                                        
+                                        Tooltip 
+                                            contentStyle={{ 
+                                                backgroundColor '#0a0a0a', 
+                                                borderColor '#881337', 
+                                                color '#fb7185',
+                                                borderRadius '12px',
+                                                boxShadow '0 0 30px rgba(136, 19, 55, 0.5)'
+                                            }} 
+                                            itemStyle={{ color '#fff' }}
+                                            labelStyle={{ color '#888', marginBottom '0.5rem' }}
+                                            formatter={(value, name) = [value, name === 'incidents'  'Security Incidents'  name]}
+                                        
+                                        { THE ELECTRIC LINE Shows Security Incident Trend }
+                                        Line 
+                                            type=monotone 
+                                            dataKey=incidents 
+                                            stroke={NEON_WHITE} 
+                                            strokeWidth={3} 
+                                            dot={false}
+                                            name=Security Incidents
+                                            className=electric-line  Apply CSS animation here
+                                            activeDot={{ 
+                                                r 8, 
+                                                fill NEON_WHITE, 
+                                                stroke BURGUNDY_HEX, 
+                                                strokeWidth 4,
+                                                className animate-pulse
+                                            }}
+                                        
+                                    LineChart
+                                )  (
+                                    BarChart data={data} margin={{ top 10, right 10, left -10, bottom 0 }}
+                                        CartesianGrid strokeDasharray=3 3 stroke=#333 vertical={false} opacity={0.3} 
+                                        XAxis 
+                                            dataKey=hour 
+                                            stroke=#525252 
+                                            tick={{fontSize 11, fill '#a3a3a3', fontWeight 600}} 
+                                            tickLine={false}
+                                            axisLine={false}
+                                            dy={10}
+                                        
+                                        YAxis 
+                                            stroke=#525252 
+                                            tick={{fontSize 11, fill '#a3a3a3'}} 
+                                            tickLine={false}
+                                            axisLine={false}
+                                            label={{ value 'Tickets', angle -90, position 'insideLeft', fill '#a3a3a3', fontSize 11 }}
+                                        
+                                        Tooltip 
+                                            cursor={{fill 'rgba(255, 255, 255, 0.05)'}} 
+                                            contentStyle={{ 
+                                                backgroundColor '#0a0a0a', 
+                                                borderColor '#881337', 
+                                                color '#fb7185',
+                                                borderRadius '12px',
+                                                boxShadow '0 0 30px rgba(136, 19, 55, 0.5)'
+                                            }} 
+                                            formatter={(value, name) = [value, name === 'service_tickets'  'Service Tickets'  name]}
+                                        
+                                        Bar 
+                                            dataKey=service_tickets 
+                                            name=Service Tickets
+                                            radius={[6, 6, 0, 0]} 
+                                            barSize={40}
+                                        
+                                            { Gradient Fill for Bars }
+                                            {data.map((entry, index) = (
+                                                cell key={`cell-${index}`} fill=url(#barGradient) 
+                                            ))}
+                                        Bar
+                                        defs
+                                            linearGradient id=barGradient x1=0 y1=0 x2=0 y2=1
+                                                stop offset=0% stopColor={LIGHT_RED_HEX} stopOpacity={1} 
+                                                stop offset=100% stopColor={BURGUNDY_HEX} stopOpacity={0.6} 
+                                            linearGradient
+                                        defs
+                                    BarChart
+                                )}
+                            ResponsiveContainer
+                        div
+                    div
+                div
+
+                { NEW KPI STATUS PANEL }
+                KpiStatusPanel 
+
+                { ORBITAL  GLOSSY FOOTER BUTTONS (Existing Metrics) }
+                div className=grid grid-cols-1 mdgrid-cols-3 gap-6
+                    {[
+                        { label 'Security Status', val 'SECURE (A-7)', icon Shield, color 'text-emerald-400', glow 'shadow-emerald-90040' },
+                        { label 'Staff Utilization', val '94.5%', icon Users, color 'text-rose-400', glow 'shadow-rose-90040' },
+                        { label 'Critical Tickets', val '3', icon AlertTriangle, color 'text-yellow-400', glow 'shadow-yellow-90040' }
+                    ].map((stat, i) = (
+                        div 
+                            key={i} 
+                            className={`
+                                relative group cursor-pointer
+                                rounded-full p-[1px]  Border via padding 
+                                bg-gradient-to-b from-white20 via-white5 to-transparent
+                            `}
+                        
+                            { The Inner Orbital Card }
+                            div className=
+                                relative h-full w-full rounded-full 
+                                bg-black80 backdrop-blur-xl 
+                                px-6 py-4 
+                                flex items-center justify-between
+                                overflow-hidden
+                            
+                                { Top gloss highlight inside button }
+                                div className=absolute top-0 inset-x-0 h-[50%] bg-gradient-to-b from-white10 to-transparent opacity-50 
+                                
+                                { Icon Circle }
+                                div className=
+                                    relative z-10 w-10 h-10 rounded-full 
+                                    bg-neutral-90080 border border-white10
+                                    flex items-center justify-center
+                                    shadow-inner
+                                
+                                    stat.icon size={18} className=text-neutral-400 group-hovertext-white transition-colors 
+                                div
+
+                                { Text Data }
+                                div className=relative z-10 text-right
+                                    div className=text-[10px] uppercase font-bold tracking-widest text-neutral-500 mb-0.5
+                                        {stat.label}
+                                    div
+                                    div className={`text-xl font-mono font-bold ${stat.color} drop-shadow-[0_0_8px_rgba(0,0,0,0.8)]`}
+                                        {stat.val}
+                                    div
+                                div
+
+                                { Hover Glow Ring Effect (Orbital) }
+                                div className={`
+                                    absolute inset-0 rounded-full opacity-0 group-hoveropacity-100 transition-opacity duration-500
+                                    box-border border-2 border-transparent
+                                    bg-gradient-to-r from-transparent via-white5 to-transparent
+                                    ${stat.glow} shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]
+                                `} 
+                            div
+                        div
+                    ))}
+                div
+
+            div
+            
+            { --- RIGHT COLUMN Sidebar Content (Log Feed & Active Users) --- }
+            div className=lgcol-span-4 flex flex-col gap-6
+                LogFeed 
+                QuickActionPanel 
+            div
+
+        div
+      div
+    
+  );
+};
+
+export default App;

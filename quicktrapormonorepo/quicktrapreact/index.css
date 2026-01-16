@@ -1,0 +1,121 @@
+@import "tailwindcss";
+
+/* Tailwind v4 Theme Configuration */
+@theme {
+  /* Custom Colors */
+  --color-graphite: #2e2e2e;
+  --color-concrete: #f5f4f2;
+  --color-blueprint: #1e75bb;
+  --color-steel: #797979;
+  --color-brand-accent: #d7b86a;
+  
+  /* Typography Scale */
+  --font-size-hero: 3.5rem;
+  --font-size-h1: 2.75rem;
+  --font-size-h2: 2rem;
+  --font-size-h3: 1.4rem;
+  --font-size-body: 1.125rem;
+  
+  /* Spacing Tokens */
+  --spacing-section: 6rem;
+  --spacing-section-lg: 8rem;
+  --spacing-card-gap: 2rem;
+  --spacing-inner: 1.75rem;
+  
+  /* Border Radius */
+  --radius-card: 0.75rem;
+  
+  /* Box Shadows */
+  --shadow-card: 0 6px 18px rgba(0, 0, 0, 0.08);
+  --shadow-card-hover: 0 10px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* Improved font smoothing */
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Section rhythm */
+section {
+  padding-top: 6rem;
+  padding-bottom: 6rem;
+}
+
+/* Typography improvements */
+h1, h2, h3, h4 {
+  letter-spacing: -0.01em;
+}
+
+p {
+  line-height: 1.7;
+}
+
+/* Blueprint grid utility */
+.blueprint-grid {
+  background-size: 40px 40px;
+  background-image:
+    linear-gradient(to right, rgba(0,0,0,0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0,0,0,0.07) 1px, transparent 1px);
+}
+
+/* Custom utility classes for Tailwind v4 */
+@utility rounded-card {
+  border-radius: var(--radius-card);
+}
+
+@utility p-inner {
+  padding: var(--spacing-inner);
+}
+
+@utility py-section {
+  padding-top: var(--spacing-section);
+  padding-bottom: var(--spacing-section);
+}
+
+@utility py-section-lg {
+  padding-top: var(--spacing-section-lg);
+  padding-bottom: var(--spacing-section-lg);
+}
+
+@utility mt-section {
+  margin-top: var(--spacing-section);
+}
+
+@utility gap-card-gap {
+  gap: var(--spacing-card-gap);
+}
+
+@utility shadow-card {
+  box-shadow: var(--shadow-card);
+}
+
+@utility shadow-card-hover {
+  box-shadow: var(--shadow-card-hover);
+}
+
+@utility text-hero {
+  font-size: var(--font-size-hero);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+@utility text-h1 {
+  font-size: var(--font-size-h1);
+  line-height: 1.15;
+}
+
+@utility text-h2 {
+  font-size: var(--font-size-h2);
+  line-height: 1.25;
+}
+
+@utility text-h3 {
+  font-size: var(--font-size-h3);
+  line-height: 1.35;
+}
+
+@utility text-body {
+  font-size: var(--font-size-body);
+  line-height: 1.65;
+}

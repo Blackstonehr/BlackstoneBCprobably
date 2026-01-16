@@ -1,0 +1,695 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
+} from 'recharts';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  ChevronDown, Shield, TrendingUp, Users, AlertTriangle, BarChart2, Zap, Clock, Cpu, 
+  Activity, User, MessageSquare, Menu, Globe, AlertOctagon, Settings, ToggleLeft, ToggleRight, Database, Headset, Send
+} from 'lucide-react';
+
+// --- CSS for Custom Animations (Siren & Electric Line) ---
+const customStyles = `
+  /* Rotation for the background effect */
+  @keyframes spin-slow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  /* Pulsing for the high-priority elements */
+  @keyframes pulse-intense {
+    0%, 100% { box-shadow: 0 0 10px rgba(251, 113, 133, 0.4), 0 0 0 0 rgba(251, 113, 133, 0.7); }
+    50% { box-shadow: 0 0 20px rgba(251, 113, 133, 0.8), 0 0 0 10px rgba(251, 113, 133, 0); }
+  }
+  /* The Electric Line Class targeted by Recharts (The "Moving Line") */
+  .electric-line path {
+    stroke-dasharray: 12 6; 
+    animation: electricity-flow 1s linear infinite; 
+    filter: drop-shadow(0 0 5px #fb7185) drop-shadow(0 0 10px #be123c); 
+    stroke-linecap: round;
+  }
+  /* Custom animation for the submit button glow */
+  @keyframes glow-submit {
+      0%, 100% { box-shadow: 0 0 5px #10b981; }
+      50% { box-shadow: 0 0 20px #10b981, 0 0 30px #059669; }
+  }
+`;
+
+// --- Operational Timeline Data ---
+const data = [
+  { hour: '06:00', incidents: 5, service_tickets: 120 },
+  { hour: '09:00', incidents: 8, service_tickets: 185 },
+  { hour: '12:00', incidents: 12, service_tickets: 350 },
+  { hour: '15:00', incidents: 7, service_tickets: 240 },
+  { hour: '18:00', incidents: 10, service_tickets: 300 },
+  { hour: '21:00', incidents: 4, service_tickets: 150 },
+  { hour: '23:59', incidents: 2, service_tickets: 90 },
+];
+
+// --- Theme Constants ---
+const BURGUNDY_HEX = '#881337'; // rose-900
+const LIGHT_RED_HEX = '#fb7185'; // rose-400
+const NEON_WHITE = '#ffe4e6'; // rose-50
+
+// --- COMPONENTS START ---
+
+// 1. Fixed Top Navigation/Status Bar
+const NavBar = () => {
+    return (
+        <header className="
+            fixed top-0 left-0 right-0 z-50 p-4 md:px-8
+            bg-black/80 backdrop-blur-md 
+            border-b border-rose-900/50 
+            shadow-xl
+        ">
+            <div className="flex justify-between items-center max-w-6xl mx-auto">
+                {/* Logo/System Status */}
+                <div className="flex items-center gap-4">
+                    <div className="relative p-2 rounded-lg bg-black border border-rose-800 shadow-[0_0_15px_rgba(225,29,72,0.3)]">
+                        <Shield size={18} className="text-rose-500" />
+                        <div className="absolute inset-0 rounded-lg animate-pulse bg-rose-500/10" />
+                    </div>
+                    <div className="hidden sm:block">
+                        <h1 className="text-lg font-bold tracking-widest text-white">BLACKSTONE <span className="text-rose-500">GRID</span></h1>
+                        <p className="text-xs text-neutral-500 -mt-0.5">OPERATIONAL STATUS: <span className="text-emerald-400 font-mono">ONLINE</span></p>
+                    </div>
+                </div>
+
+                {/* Quick Metrics / Nav */}
+                <div className="flex items-center gap-6">
+                    <div className="hidden lg:flex items-center gap-4 text-sm font-mono">
+                        <div className="flex items-center text-emerald-400">
+                            <Clock size={14} className="mr-1" /> Uptime: 99.99%
+                        </div>
+                        <div className="flex items-center text-yellow-400">
+                            <AlertOctagon size={14} className="mr-1" /> Alerts: 3
+                        </div>
+                    </div>
+                    <button className="p-2 rounded-lg text-rose-300 hover:bg-rose-900/30 transition-colors border border-transparent hover:border-rose-700">
+                        <Menu size={20} />
+                    </button>
+                </div>
+            </div>
+        </header>
+    );
+};
+
+// 2. Key Performance Indicator (KPI) Status Panel
+const KpiStatusPanel = () => {
+  const kpis = [
+    { name: 'System Uptime', value: '99.99%', status: 'Operational', icon: Clock, color: 'text-emerald-400' },
+    { name: 'Avg. Latency', value: '15ms', status: 'Optimal', icon: Zap, color: 'text-rose-400' },
+    { name: 'Resource Load', value: '62%', status: 'Nominal', icon: Cpu, color: 'text-yellow-400' },
+    { name: 'Client Feedback', value: '8.9/10', status: 'High', icon: MessageSquare, color: 'text-cyan-400' },
+  ];
+
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {kpis.map((kpi, i) => (
+        <div 
+          key={i} 
+          className="
+            relative p-4 rounded-lg bg-neutral-900/60 border border-white/10 overflow-hidden 
+            hover:bg-neutral-800/80 transition-all duration-300 
+            hover:shadow-[0_0_15px_rgba(251,113,133,0.3)] hover:border-rose-700/50 cursor-pointer
+          "
+        >
+          <div className={`absolute top-0 right-0 w-3 h-3 rounded-bl-lg ${kpi.color.replace('text-', 'bg-')} opacity-30 blur-sm`} />
+          <div className="flex items-center justify-between mb-3">
+            <kpi.icon size={18} className={kpi.color} />
+            <span className={`text-[10px] uppercase font-bold ${kpi.color}`}>{kpi.status}</span>
+          </div>
+          <div className="text-xl font-bold font-mono text-white mb-0.5">{kpi.value}</div>
+          <p className="text-xs text-neutral-400">{kpi.name}</p>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// 3. Geopolitical/Geospatial Threat Monitor
+const GeoSpatialThreats = () => {
+    const zones = [
+        { id: 'Zone Alpha', status: 'Critical Threat', color: 'bg-red-500', icon: AlertTriangle, latency: '400ms' },
+        { id: 'Zone Gamma', status: 'Elevated Risk', color: 'bg-yellow-500', icon: AlertOctagon, latency: '120ms' },
+        { id: 'Zone Beta', status: 'Nominal', color: 'bg-emerald-500', icon: Shield, latency: '35ms' },
+    ];
+
+    return (
+        <div className="
+            relative p-6 bg-neutral-900/60 rounded-xl border border-rose-900/40
+            shadow-[0_0_20px_-5px_rgba(136,19,55,0.2)]
+        ">
+            <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-rose-300 mb-6">
+                <Globe size={16} className="text-rose-500" /> Geospatial Threat Monitor
+            </h3>
+            
+            <div className="flex flex-col lg:flex-row gap-6">
+                {/* Simulated Map View */}
+                <div className="relative flex-grow h-48 lg:h-auto bg-neutral-950 rounded-lg border border-white/5 overflow-hidden flex items-center justify-center">
+                    {/* Pulsing Global Grid (SVG for complexity) */}
+                    <svg className="w-full h-full opacity-50 absolute inset-0" viewBox="0 0 100 100" preserveAspectRatio="none">
+                        <circle cx="50" cy="50" r="45" stroke="#374151" strokeWidth="0.5" fill="none" />
+                        <line x1="50" y1="5" x2="50" y2="95" stroke="#374151" strokeWidth="0.5" />
+                        <line x1="5" y1="50" x2="95" y2="50" stroke="#374151" strokeWidth="0.5" />
+                        <path 
+                            d="M 50 5 C 75 25, 75 75, 50 95 C 25 75, 25 25, 50 5" 
+                            stroke="#374151" 
+                            strokeWidth="0.5" 
+                            fill="none" 
+                            transform="rotate(30 50 50)" 
+                        />
+                         <path 
+                            d="M 50 5 C 75 25, 75 75, 50 95 C 25 75, 25 25, 50 5" 
+                            stroke="#374151" 
+                            strokeWidth="0.5" 
+                            fill="none" 
+                            transform="rotate(-30 50 50)" 
+                        />
+                    </svg>
+
+                    {/* Threat Vector Markers */}
+                    {zones.map((zone, i) => (
+                        <div 
+                            key={i} 
+                            className={`
+                                absolute w-4 h-4 rounded-full flex items-center justify-center
+                                ${zone.color} shadow-[0_0_15px_var(--tw-bg-opacity)]
+                                ${zone.status === 'Critical Threat' ? 'animate-ping-slow' : ''}
+                            `}
+                            style={{ 
+                                top: `${20 + i * 20}%`, 
+                                left: `${50 + (i % 2 === 0 ? 30 : -30)}%`,
+                                transition: 'all 0.5s ease-in-out'
+                            }}
+                        >
+                            <zone.icon size={10} className="text-black/80" />
+                        </div>
+                    ))}
+                    
+                </div>
+                
+                {/* Zone Status List */}
+                <div className="lg:w-1/3 space-y-3">
+                    {zones.map((zone, i) => (
+                        <div 
+                            key={i} 
+                            className="p-3 bg-neutral-950 rounded-lg hover:bg-neutral-800 transition-colors border border-transparent hover:border-rose-900/50 cursor-pointer"
+                        >
+                            <div className="flex justify-between items-center text-xs font-mono mb-1">
+                                <span className={`font-semibold ${zone.color.replace('bg-', 'text-')}`}>{zone.id}</span>
+                                <span className="text-neutral-500">{zone.latency} RTT</span>
+                            </div>
+                            <p className="text-neutral-400 text-xs flex items-center gap-1">
+                                <zone.icon size={12} className={zone.color.replace('bg-', 'text-')} />
+                                {zone.status}
+                            </p>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// 4. System Configuration/Control Panel
+const SystemControlPanel = () => {
+    const [config, setConfig] = useState({
+        autoPatch: true,
+        dataReplication: false,
+        debugMode: false,
+        firewallEnabled: true,
+    });
+
+    const toggleConfig = (key) => {
+        setConfig(prev => ({ ...prev, [key]: !prev[key] }));
+    };
+
+    const controls = [
+        { key: 'autoPatch', label: 'Automated Patching', icon: Settings, color: config.autoPatch ? 'text-emerald-400' : 'text-neutral-500' },
+        { key: 'dataReplication', label: 'High-Latency Replication', icon: Database, color: config.dataReplication ? 'text-rose-400' : 'text-neutral-500' },
+        { key: 'debugMode', label: 'Enable Diagnostic Mode', icon: Zap, color: config.debugMode ? 'text-yellow-400' : 'text-neutral-500' },
+        { key: 'firewallEnabled', label: 'Perimeter Firewall', icon: Shield, color: config.firewallEnabled ? 'text-emerald-400' : 'text-red-400' },
+    ];
+
+    return (
+        <div className="
+            relative p-6 bg-neutral-900/60 rounded-xl border border-rose-900/40
+            shadow-[0_0_20px_-5px_rgba(136,19,55,0.2)]
+        ">
+            <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-neutral-300 mb-6">
+                <Settings size={16} className="text-neutral-500" /> System Control Interface
+            </h3>
+            
+            <div className="grid grid-cols-2 gap-4">
+                {controls.map((control) => (
+                    <div 
+                        key={control.key}
+                        className="p-4 bg-neutral-950/70 rounded-lg border border-white/5 flex flex-col justify-between cursor-pointer 
+                            hover:bg-neutral-800/80 transition-all duration-200"
+                        onClick={() => toggleConfig(control.key)}
+                    >
+                        <div className="flex items-center gap-2 mb-2">
+                            <control.icon size={16} className={control.color} />
+                            <span className="text-xs font-semibold text-white/90">{control.label}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <span className={`text-[10px] font-mono font-bold uppercase ${config[control.key] ? 'text-emerald-400' : 'text-red-400'}`}>
+                                {config[control.key] ? 'Active' : 'Inactive'}
+                            </span>
+                            {config[control.key] ? (
+                                <ToggleRight size={24} className="text-emerald-500 transition-colors" />
+                            ) : (
+                                <ToggleLeft size={24} className="text-neutral-600 transition-colors" />
+                            )}
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+// 5. Live Log Feed Component
+const LogFeed = () => {
+  const [logs, setLogs] = useState([
+    { time: '23:58:12', level: 'CRIT', message: 'Auth flow breach attempt detected. Geo-Lock initiated.', color: 'text-red-500' },
+    { time: '23:59:01', level: 'WARN', message: 'High utilization alert (CPU 98%) on NODE_7.', color: 'text-yellow-500' },
+    { time: '00:00:15', level: 'INFO', message: 'System health check passed (A-7). Services nominal.', color: 'text-emerald-500' },
+    { time: '00:01:45', level: 'EVENT', message: 'User: T-821 initiated System Reboot sequence.', color: 'text-rose-500' },
+    { time: '00:02:11', level: 'INFO', message: 'Service "Finance Ledger" synchronized.', color: 'text-neutral-400' },
+  ]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const newLog = {
+        time: new Date().toTimeString().slice(0, 8),
+        level: 'INFO',
+        message: `Heartbeat check successful on Cluster ${Math.floor(Math.random() * 9) + 1}.`,
+        color: 'text-neutral-400',
+      };
+      setLogs(prevLogs => [newLog, ...prevLogs.slice(0, 4)]);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="
+      p-5 bg-neutral-900/60 rounded-xl border border-rose-900/40
+      shadow-[0_0_15px_-5px_rgba(136,19,55,0.2)] flex flex-col h-72 lg:h-[350px]
+    ">
+      <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-rose-300 mb-4">
+        <Activity size={16} className="text-rose-500" /> Live Operational Log
+      </h3>
+      <div className="flex-grow overflow-y-auto font-mono text-xs custom-scrollbar">
+        {logs.map((log, index) => (
+          <motion.div
+            key={log.time + index}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className={`
+                py-2 border-b border-white/5 last:border-b-0 cursor-pointer transition-all duration-200
+                hover:bg-rose-900/20 hover:border-rose-500/30 px-2 -mx-2 rounded-md
+                ${log.color}
+            `}
+          >
+            <span className="text-neutral-600 mr-2">[ {log.time} ]</span>
+            <span className={`font-bold mr-2 ${log.color}`}>{log.level}</span>
+            {log.message}
+          </motion.div>
+        ))}
+        <style jsx="true">{`
+          .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+          .custom-scrollbar::-webkit-scrollbar-thumb { background-color: ${LIGHT_RED_HEX}; border-radius: 4px; }
+          .custom-scrollbar::-webkit-scrollbar-track { background: #111; }
+        `}</style>
+      </div>
+    </div>
+  );
+};
+
+// 6. Contact Support Panel (NEW COMPONENT)
+const ContactSupportPanel = () => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [message, setMessage] = useState('');
+    const [status, setStatus] = useState(null);
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        if (message.trim().length < 10) {
+            setStatus({ type: 'error', text: 'Message must be at least 10 characters.' });
+            return;
+        }
+
+        setStatus({ type: 'success', text: 'Ticket 5521 created. Stand by for specialist contact.' });
+        setMessage('');
+        setTimeout(() => setStatus(null), 5000);
+    };
+
+    return (
+        <div className="
+            relative w-full 
+            rounded-xl overflow-hidden
+            border border-white/10
+            shadow-[0_0_20px_rgba(251,113,133,0.1)]
+            bg-neutral-900/60 backdrop-blur-lg
+        ">
+            {/* Header Button - Glass Effect */}
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="
+                    w-full flex items-center justify-between p-4
+                    bg-gradient-to-br from-rose-950/80 to-black/80
+                    hover:from-rose-900/90 hover:to-black/90
+                    transition-all duration-300
+                    text-white font-bold tracking-widest uppercase text-sm
+                    border-b border-white/10
+                    shadow-xl
+                "
+            >
+                <span className="flex items-center gap-3">
+                    <Headset size={18} className="text-emerald-400" />
+                    OPERATIONAL SUPPORT
+                </span>
+                <ChevronDown size={18} className={`transition-transform ${isOpen ? 'rotate-180 text-rose-400' : 'text-neutral-400'}`} />
+            </button>
+
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="overflow-hidden p-4"
+                    >
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <p className="text-xs text-neutral-400">Need immediate assistance? Submit a priority ticket below.</p>
+                            
+                            {/* Textarea - Sharper, High Contrast */}
+                            <textarea
+                                value={message}
+                                onChange={(e) => setMessage(e.target.value)}
+                                placeholder="Describe the operational issue..."
+                                rows="4"
+                                className="
+                                    w-full p-3 rounded-lg text-sm font-mono
+                                    bg-neutral-950/80 border border-rose-900/50
+                                    text-white placeholder-neutral-600
+                                    focus:ring-1 focus:ring-rose-500 focus:border-rose-500
+                                    transition-all duration-200 resize-none
+                                "
+                            ></textarea>
+
+                            {/* Status Message */}
+                            <AnimatePresence>
+                                {status && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        className={`
+                                            p-2 text-xs rounded-lg font-mono
+                                            ${status.type === 'success' ? 'bg-emerald-900/50 text-emerald-400 border border-emerald-500/50' : 'bg-red-900/50 text-red-400 border border-red-500/50'}
+                                        `}
+                                    >
+                                        {status.text}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
+                            {/* Submit Button - Gradient/Glow */}
+                            <button
+                                type="submit"
+                                className="
+                                    w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold uppercase tracking-wider
+                                    bg-gradient-to-r from-emerald-600 to-teal-500 text-white
+                                    hover:from-emerald-500 hover:to-teal-400 transition-all duration-300
+                                    shadow-xl
+                                    animate-[glow-submit_3s_ease-in-out_infinite]
+                                "
+                            >
+                                <Send size={16} />
+                                Submit Ticket
+                            </button>
+                        </form>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+}
+
+// 7. Quick Action/Active Users Panel
+const QuickActionPanel = () => {
+  const users = [
+    { id: 'T-821', role: 'Security Analyst', online: true },
+    { id: 'F-099', role: 'Finance Controller', online: true },
+    { id: 'S-404', role: 'Support Agent', online: false },
+    { id: 'A-113', role: 'Admin', online: true },
+    { id: 'M-300', role: 'Marketing Lead', online: false },
+  ];
+  return (
+    <div className="
+      p-5 bg-neutral-900/60 rounded-xl border border-rose-900/40
+      shadow-[0_0_15px_-5px_rgba(136,19,55,0.2)] flex flex-col
+    ">
+      <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-neutral-300 mb-4">
+        <User size={16} className="text-neutral-500" /> Active Personnel
+      </h3>
+      <div className="space-y-2">
+        {users.map((user, i) => (
+          <div 
+            key={i} 
+            className="
+                flex items-center justify-between p-3 rounded-lg 
+                bg-neutral-950/70 hover:bg-neutral-800 transition-colors cursor-pointer
+                hover:shadow-[0_0_10px_rgba(251,113,133,0.2)]
+            "
+          >
+            <div className="flex items-center gap-3">
+              <div className={`w-3 h-3 rounded-full ${user.online ? 'bg-emerald-500 shadow-emerald-500/50' : 'bg-red-500 shadow-red-500/50'} blur-[1px]`} />
+              <div>
+                <span className="font-mono text-sm font-semibold text-white">{user.id}</span>
+                <p className="text-xs text-neutral-500">{user.role}</p>
+              </div>
+            </div>
+            <span className={`text-[10px] uppercase font-bold ${user.online ? 'text-emerald-300' : 'text-red-300'}`}>
+              {user.online ? 'Online' : 'Offline'}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+
+// Main Application Component
+const App = () => {
+  const [graphType, setGraphType] = useState('line');
+
+  const handleSelect = (type) => {
+    setGraphType(type);
+  };
+
+  return (
+    <>
+      <style>{customStyles}</style>
+
+      <div className="min-h-screen w-full bg-black flex items-start justify-center font-sans text-neutral-200 selection:bg-rose-900 selection:text-white overflow-y-auto">
+        
+        {/* --- FIXED BACKGROUND & HERO FLARE --- */}
+        <div className="fixed inset-0 z-0 pointer-events-none opacity-50">
+            {/* Dark Grid Pattern */}
+            <div 
+                className="absolute inset-0 opacity-20" 
+                style={{ backgroundImage: 'linear-gradient(to right, #881337 1px, transparent 1px), linear-gradient(to bottom, #881337 1px, transparent 1px)', backgroundSize: '40px 40px' }} 
+            />
+            {/* Central Radial Flare */}
+            <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-rose-900/30 rounded-full blur-[100px] opacity-30 animate-pulse" />
+        </div>
+
+        {/* TOP NAV BAR (Z-index 50) */}
+        <NavBar />
+        
+        {/* MAIN GRID CONTAINER (Z-index 10) - Padded to account for fixed header */}
+        <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-6 pt-24 pb-8 px-4 md:px-8 relative z-10">
+            
+            {/* --- LEFT COLUMN: Main Dashboard Content (Charts, Geospatial, Control) --- */}
+            <div className="lg:col-span-8 flex flex-col gap-6">
+
+                {/* MAIN CARD: CHARTS */}
+                <div className="
+                    relative w-full
+                    rounded-xl 
+                    bg-neutral-950/80 backdrop-blur-xl 
+                    border border-rose-900/40
+                    shadow-[0_0_30px_-5px_rgba(136,19,55,0.4)]
+                    group
+                    overflow-hidden
+                ">
+                    {/* --- EFFECT LAYERS --- */}
+                    <div className="absolute inset-[-50%] siren-sweep opacity-30 pointer-events-none z-0" />
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.8)_100%)] pointer-events-none z-0" />
+                    <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-rose-400/50 to-transparent z-20" />
+                    
+                    {/* CONTENT WRAPPER */}
+                    <div className="relative z-10 p-6 md:p-8 flex flex-col gap-6">
+                        
+                        {/* HEADER & DROPDOWN */}
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                            <div>
+                                <h2 className="text-xl font-bold tracking-wider text-white">
+                                    CORE SERVICE <span className="text-rose-500">PERFORMANCE</span>
+                                </h2>
+                                <p className="text-sm text-neutral-500 mt-1 font-mono">24-Hour Timeline Analysis</p>
+                            </div>
+
+                            <div className="relative">
+                                <div className="flex gap-2 p-1 bg-black/60 rounded-lg border border-rose-900/50">
+                                    <button
+                                        onClick={() => handleSelect('line')}
+                                        className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors flex items-center gap-1 ${graphType === 'line' ? 'bg-rose-800 text-white shadow-lg' : 'text-neutral-400 hover:text-rose-200'}`}
+                                    >
+                                        <TrendingUp size={14} /> Incidents
+                                    </button>
+                                    <button
+                                        onClick={() => handleSelect('bar')}
+                                        className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors flex items-center gap-1 ${graphType === 'bar' ? 'bg-rose-800 text-white shadow-lg' : 'text-neutral-400 hover:text-rose-200'}`}
+                                    >
+                                        <BarChart2 size={14} /> Tickets
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* CHART CONTAINER */}
+                        <div className="
+                            relative w-full h-[350px] 
+                            bg-black/40 rounded-lg 
+                            border border-white/5
+                            shadow-inner
+                            p-4 overflow-hidden
+                        ">
+                            <div className="absolute inset-0 opacity-10" 
+                                style={{ backgroundImage: 'linear-gradient(to right, #881337 1px, transparent 1px), linear-gradient(to bottom, #881337 1px, transparent 1px)', backgroundSize: '20px 20px' }} 
+                            />
+                            
+                            <ResponsiveContainer width="100%" height="100%">
+                                {graphType === 'line' ? (
+                                    <LineChart data={data} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} opacity={0.3} />
+                                        <XAxis dataKey="hour" stroke="#525252" tick={{fontSize: 11, fill: '#a3a3a3', fontWeight: 600}} tickLine={false} axisLine={false} dy={10} />
+                                        <YAxis stroke="#525252" tick={{fontSize: 11, fill: '#a3a3a3'}} tickLine={false} axisLine={false} label={{ value: 'Incidents', angle: -90, position: 'insideLeft', fill: '#a3a3a3', fontSize: 11 }} />
+                                        <Tooltip contentStyle={{ backgroundColor: '#0a0a0a', borderColor: '#881337', color: '#fb7185', borderRadius: '8px', boxShadow: '0 0 30px rgba(136, 19, 55, 0.5)' }} itemStyle={{ color: '#fff' }} labelStyle={{ color: '#888', marginBottom: '0.5rem' }} formatter={(value, name) => [value, name === 'incidents' ? 'Security Incidents' : name]} />
+                                        <Line type="monotone" dataKey="incidents" stroke={NEON_WHITE} strokeWidth={3} dot={false} name="Security Incidents" className="electric-line" activeDot={{ r: 8, fill: NEON_WHITE, stroke: BURGUNDY_HEX, strokeWidth: 4, className: "animate-pulse" }} />
+                                    </LineChart>
+                                ) : (
+                                    <BarChart data={data} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} opacity={0.3} />
+                                        <XAxis dataKey="hour" stroke="#525252" tick={{fontSize: 11, fill: '#a3a3a3', fontWeight: 600}} tickLine={false} axisLine={false} dy={10} />
+                                        <YAxis stroke="#525252" tick={{fontSize: 11, fill: '#a3a3a3'}} tickLine={false} axisLine={false} label={{ value: 'Tickets', angle: -90, position: 'insideLeft', fill: '#a3a3a3', fontSize: 11 }} />
+                                        <Tooltip cursor={{fill: 'rgba(255, 255, 255, 0.05)'}} contentStyle={{ backgroundColor: '#0a0a0a', borderColor: '#881337', color: '#fb7185', borderRadius: '8px', boxShadow: '0 0 30px rgba(136, 19, 55, 0.5)' }} formatter={(value, name) => [value, name === 'service_tickets' ? 'Service Tickets' : name]} />
+                                        <Bar dataKey="service_tickets" name="Service Tickets" radius={[4, 4, 0, 0]} barSize={30}>
+                                            {data.map((entry, index) => (<cell key={`cell-${index}`} fill="url(#barGradient)" />))}
+                                        </Bar>
+                                        <defs>
+                                            <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="0%" stopColor={LIGHT_RED_HEX} stopOpacity={1} />
+                                                <stop offset="100%" stopColor={BURGUNDY_HEX} stopOpacity={0.6} />
+                                            </linearGradient>
+                                        </defs>
+                                    </BarChart>
+                                )}
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+                </div>
+                
+                {/* GEOSPATIAL THREATS & SYSTEM CONTROL (Organized in a 2x1 grid) */}
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    <GeoSpatialThreats />
+                    <SystemControlPanel />
+                </div>
+                
+                {/* KPI STATUS PANEL (Existing Metrics, now at the bottom of the main column) */}
+                <KpiStatusPanel />
+
+            </div>
+            
+            {/* --- RIGHT COLUMN: Sidebar Content --- */}
+            <div className="lg:col-span-4 flex flex-col gap-6">
+                <LogFeed />
+                
+                {/* NEW: CONTACT SUPPORT PANEL */}
+                <ContactSupportPanel />
+                
+                <QuickActionPanel />
+                
+                {/* ORBITAL / GLOSSY FOOTER BUTTONS (Kept here) */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-1 gap-6">
+                    {[
+                        { label: 'Security Status', val: 'SECURE (A-7)', icon: Shield, color: 'text-emerald-400', glow: 'shadow-emerald-700/60' },
+                        { label: 'Staff Utilization', val: '94.5%', icon: Users, color: 'text-rose-400', glow: 'shadow-rose-700/60' },
+                        { label: 'Critical Tickets', val: '3', icon: AlertTriangle, color: 'text-yellow-400', glow: 'shadow-yellow-700/60', pulse: true }
+                    ].map((stat, i) => (
+                        <div 
+                            key={i} 
+                            className={`
+                                relative group cursor-pointer
+                                rounded-full p-[1px]
+                                bg-gradient-to-b from-white/20 via-white/5 to-transparent
+                                transition-all duration-300
+                                ${stat.pulse ? 'animate-[pulse-intense_3s_infinite]' : ''}
+                            `}
+                        >
+                            <div className="
+                                relative h-full w-full rounded-full 
+                                bg-black/80 backdrop-blur-xl 
+                                px-6 py-4 
+                                flex items-center justify-between
+                                overflow-hidden
+                                border border-transparent group-hover:border-rose-700/50
+                                transition-all duration-300
+                            ">
+                                <div className="absolute top-0 inset-x-0 h-[50%] bg-gradient-to-b from-white/10 to-transparent opacity-50" />
+                                
+                                <div className="
+                                    relative z-10 w-10 h-10 rounded-full 
+                                    bg-neutral-900/80 border border-white/10
+                                    flex items-center justify-center
+                                    shadow-inner group-hover:bg-rose-900/50
+                                    transition-colors
+                                ">
+                                    <stat.icon size={18} className="text-neutral-400 group-hover:text-white transition-colors" />
+                                </div>
+
+                                <div className="relative z-10 text-right">
+                                    <div className="text-[10px] uppercase font-bold tracking-widest text-neutral-500 mb-0.5">
+                                        {stat.label}
+                                    </div>
+                                    <div className={`text-xl font-mono font-bold ${stat.color} drop-shadow-[0_0_8px_rgba(0,0,0,0.8)]`}>
+                                        {stat.val}
+                                    </div>
+                                </div>
+
+                                <div className={`
+                                    absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500
+                                    box-border border-2 border-transparent
+                                    bg-gradient-to-r from-transparent via-white/5 to-transparent
+                                    ${stat.glow} shadow-[0_0_20px_var(--tw-shadow-color),_inset_0_0_20px_rgba(0,0,0,0.5)]
+                                `} />
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default App;

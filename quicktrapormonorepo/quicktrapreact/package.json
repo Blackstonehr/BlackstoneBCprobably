@@ -1,0 +1,17 @@
+{
+  "name": "quicktrap",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@blackstone/core": "*",
+    "next": "14.1.4",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "tailwindcss": "3.4.1",
+    "shadcn-ui": "latest"
+  }
+}

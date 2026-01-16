@@ -1,0 +1,627 @@
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+// Assuming three.js is available via a global CDN import in the execution environment
+// For this environment, we'll ensure the code structure is compatible with the global THREE object.
+
+// --- 0. Library Check and Utility Functions ---
+
+// Global check for THREE.js (for safety in the single file)
+const THREE = window.THREE;
+
+const HardHatIcon = (props) => (
+  <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M2 18s1-1 4-2c2 0 5-2 8-2 3 0 7 2 7 2V5c0-1.5-1-2.5-2.5-3.5L14 3 12 1 10 3 8 1 6 3 3.5 1.5C2 2.5 2 3.5 2 5z"/>
+  </svg>
+);
+const ShieldAlertIcon = (props) => (
+  <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M12 8v4"/><path d="M12 16h.01"/>
+  </svg>
+);
+const TrendingUpIcon = (props) => (
+  <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>
+  </svg>
+);
+const CheckCircleIcon = (props) => (
+  <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/>
+  </svg>
+);
+const UsersIcon = (props) => (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+    </svg>
+);
+const ZapIcon = (props) => (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+    </svg>
+);
+const ArrowRightIcon = (props) => (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
+    </svg>
+);
+
+const renderContent = (text, className = "text-red-400") => {
+    const parts = text.split(/(\*\*.*?\*\*)/g).filter(p => p.length > 0);
+    return parts.map((part, index) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+            return <strong key={index} className={className}>{part.slice(2, -2)}</strong>;
+        }
+        return <span key={index}>{part}</span>;
+    });
+};
+
+// --- Data Structures ---
+const directives = [
+    { id: 1, title: "RAPID LABOR DEPLOYMENT", subtitle: "SKILLED TRADES", content: "We provide immediate access to experienced tradespeople across Canada — from general labourers to Red Seal Journeymen. Whether you need one worker or a full crew, our deep talent pool is ready to **mobilize quickly and efficiently**.", target: "IMMEDIACY & VOLUME", IconComponent: HardHatIcon },
+    { id: 2, title: "ABSOLUTE COMPLIANCE GRID", subtitle: "BACK-OFFICE", content: "We handle payroll processing, tax documentation, background checks, and insurance. Our team ensures every worker meets **safety, compliance, and documentation standards**.", target: "ZERO EXPOSURE", IconComponent: ShieldAlertIcon },
+    { id: 3, title: "HUMAN CAPITAL OPTIMIZATION", subtitle: "PLACEMENT", content: "We match skilled trades professionals with reputable employers in construction, industrial, and infrastructure sectors across Canada. We help you find work that aligns with your skills, tools, and career ambitions — all with **zero hassle**.", target: "MAX PROFICIENCY", IconComponent: TrendingUpIcon },
+];
+
+const dataStream = [
+    { label: "DEPLOYMENT VELOCITY", value: "3.5x", unit: "PPH", color: "text-green-400", bar: 90, barColor: "bg-green-600", shadow: "shadow-[0_0_8px_rgba(74,222,128,0.7)]" },
+    { label: "RISK EXPOSURE INDEX", value: "0.01%", unit: "RSI", color: "text-red-500", bar: 15, barColor: "bg-red-700", shadow: "shadow-[0_0_8px_rgba(220,38,38,0.7)]" },
+    { label: "RESOURCE UTILIZATION", value: "94%", unit: "RUC", color: "text-yellow-400", bar: 80, barColor: "bg-yellow-600", shadow: "shadow-[0_0_8px_rgba(251,191,36,0.7)]" },
+];
+
+const pageTwoServices = [
+    { id: 1, title: "EXECUTIVE RESOURCE ACQUISITION", directive: "COMMAND OVERRIDE", summary: "Targeted search and placement for **senior-level and executive construction roles** across Canada. Ensuring organizational leadership aligns with strategic threat mitigation." },
+    { id: 2, title: "COMPLIANCE & RISK AUDIT SERVICES", directive: "ZERO LIABILITY PROTOCOL", summary: "Proactive auditing of job site compliance, safety certifications, and insurance liability. **Automated flagging** of potential regulatory breaches." },
+    { id: 3, title: "PERSONNEL TRAINING & RECERTIFICATION", directive: "MAX PROFICIENCY UPLINK", summary: "Mandatory training modules for all deployed personnel, covering latest safety standards and trade-specific compliance. **Certifications tracked in real-time**." },
+];
+
+// --- Parallax Card Logic Hook ---
+const useParallax = (strength = 15) => { // Increased strength to 15
+    const ref = useRef(null);
+    const [style, setStyle] = useState({});
+
+    const handleMouseMove = (e) => {
+        if (!ref.current) return;
+
+        const { left, top, width, height } = ref.current.getBoundingClientRect();
+        const x = (e.clientX - left) / width;
+        const y = (e.clientY - top) / height;
+
+        const cX = x - 0.5;
+        const cY = y - 0.5;
+
+        const rX = -cY * strength * 0.2;
+        const rY = cX * strength * 0.2;
+
+        const pX = -cX * strength * 0.5;
+        const pY = -cY * strength * 0.5;
+
+        setStyle({
+            transform: `perspective(1000px) rotateX(${rX}deg) rotateY(${rY}deg)`,
+            '--tx': `${pX}px`,
+            '--ty': `${pY}px`,
+        });
+    };
+
+    const handleMouseLeave = () => {
+        setStyle({
+            transform: 'perspective(1000px) rotateX(0deg) rotateY(0deg)',
+            '--tx': '0px',
+            '--ty': '0px',
+        });
+    };
+
+    return { ref, style, handleMouseMove, handleMouseLeave };
+};
+
+// --- Key Performance Indicators (KPI) Component ---
+const KeyPerformanceIndicators = () => {
+    return (
+        <section className="max-w-6xl mx-auto p-4 sm:p-0 mt-20">
+            <h2 className="text-center text-3xl font-impact uppercase text-red-500 mb-8 tracking-widest neon-text-red border-b-4 border-red-800/50 pb-2">
+                MISSION CRITICAL DATA STREAM
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {dataStream.map((item, index) => (
+                    <div key={index} className="glass-terminal p-6 rounded-xl border-2 border-red-700/50 shadow-xl shadow-red-900/50 inner-reflection pulse-shadow-red">
+                        <div className="flex justify-between items-start mb-3">
+                            <h3 className="text-sm font-mono-code uppercase text-gray-400">{item.label}</h3>
+                            <span className={`${item.color} text-5xl font-impact neon-text-white drop-shadow-2xl`}>{item.value}</span>
+                        </div>
+                        <div className="w-full bg-gray-950 h-3 rounded-full overflow-hidden border border-red-800 shadow-inner-dark">
+                            <div 
+                                className={`${item.barColor} h-full rounded-full transition-all duration-1000 ease-out ${item.shadow} animate-pulse-fast`}
+                                style={{ width: `${item.bar}%` }}
+                            ></div>
+                        </div>
+                        <p className="text-right text-xs font-mono-code text-red-400 mt-2">
+                            TARGET: 100% {item.unit}
+                        </p>
+                    </div>
+                ))}
+            </div>
+        </section>
+    );
+};
+
+// --- THREE.JS System Map Component ---
+const SystemMap = () => {
+    const mountRef = useRef(null);
+    const containerRef = useRef(null);
+    const [isLoading, setIsLoading] = useState(true);
+
+    const initThreeJs = useCallback(() => {
+        if (!THREE || !mountRef.current || !containerRef.current) {
+            console.error("THREE.js not loaded or refs missing.");
+            return null;
+        }
+        
+        const container = containerRef.current;
+        const width = container.clientWidth;
+        const height = container.clientHeight;
+
+        // 1. Scene Setup
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x000000, 0.0005);
+        
+        // 2. Camera Setup
+        const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+        camera.position.z = 2.5;
+
+        // 3. Renderer Setup
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(width, height);
+        renderer.setClearColor(0x000000);
+
+        // Append canvas only if it hasn't been appended before
+        if (mountRef.current.children.length === 0) {
+            mountRef.current.appendChild(renderer.domElement);
+        }
+
+        // 4. Globe (The Operational Theatre - Canada)
+        const globeGeometry = new THREE.IcosahedronGeometry(1.5, 3);
+        const globeMaterial = new THREE.LineBasicMaterial({ 
+            color: 0xdc2626, // Neon Red
+            linewidth: 1, 
+            transparent: true,
+            opacity: 0.8 
+        });
+        const globe = new THREE.LineSegments(
+            new THREE.WireframeGeometry(globeGeometry),
+            globeMaterial
+        );
+        scene.add(globe);
+
+        // 5. Ambient Glow (Faking the neon effect)
+        const ambientLight = new THREE.AmbientLight(0xdc2626, 0.5); // Soft red ambient
+        scene.add(ambientLight);
+        
+        const pointLight = new THREE.PointLight(0x4ade80, 5, 50); // Green highlights
+        pointLight.position.set(5, 5, 5);
+        scene.add(pointLight);
+
+        // 6. Grid Backdrop (Aggressive Grid)
+        const gridHelper = new THREE.GridHelper(50, 50, 0x444444, 0x111111);
+        gridHelper.position.y = -1.5;
+        scene.add(gridHelper);
+
+        // 7. Mouse Interaction (Rotation)
+        let isDragging = false;
+        let previousMousePosition = { x: 0, y: 0 };
+
+        const onMouseDown = (event) => {
+            isDragging = true;
+            previousMousePosition = { x: event.clientX, y: event.clientY };
+        };
+
+        const onMouseMove = (event) => {
+            if (!isDragging) return;
+            const deltaX = event.clientX - previousMousePosition.x;
+            const deltaY = event.clientY - previousMousePosition.y;
+
+            // Apply rotation based on mouse delta
+            globe.rotation.y += deltaX * 0.005;
+            globe.rotation.x += deltaY * 0.005;
+
+            previousMousePosition = { x: event.clientX, y: event.clientY };
+        };
+
+        const onMouseUp = () => {
+            isDragging = false;
+        };
+
+        // Attach event listeners to the container
+        container.addEventListener('mousedown', onMouseDown);
+        window.addEventListener('mousemove', onMouseMove);
+        window.addEventListener('mouseup', onMouseUp);
+
+
+        // 8. Animation Loop
+        const animate = () => {
+            requestAnimationFrame(animate);
+
+            // Subtle self-rotation for ambient motion
+            globe.rotation.x += 0.0005;
+            globe.rotation.y += 0.001;
+
+            renderer.render(scene, camera);
+        };
+
+        // 9. Handle Resize
+        const onWindowResize = () => {
+            const newWidth = container.clientWidth;
+            const newHeight = container.clientHeight;
+            camera.aspect = newWidth / newHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(newWidth, newHeight);
+        };
+        window.addEventListener('resize', onWindowResize);
+        
+        // Start animation loop
+        animate();
+        setIsLoading(false);
+
+        // 10. Cleanup function
+        return () => {
+            window.removeEventListener('resize', onWindowResize);
+            window.removeEventListener('mousemove', onMouseMove);
+            window.removeEventListener('mouseup', onMouseUp);
+            container.removeEventListener('mousedown', onMouseDown);
+            if (mountRef.current && renderer.domElement) {
+                 mountRef.current.removeChild(renderer.domElement);
+            }
+            renderer.dispose();
+            
+            // Clean up scene resources to prevent memory leak
+            scene.traverse((object) => {
+                if (object.isMesh) {
+                    object.geometry.dispose();
+                    if (Array.isArray(object.material)) {
+                        object.material.forEach(material => material.dispose());
+                    } else {
+                        object.material.dispose();
+                    }
+                }
+            });
+        };
+    }, []);
+
+    // Effect to run the setup on mount
+    useEffect(() => {
+        if (THREE) {
+            const cleanup = initThreeJs();
+            return cleanup;
+        } else {
+            console.error("THREE.js library is required for the System Map.");
+            setIsLoading(false);
+        }
+    }, [initThreeJs]);
+
+
+    return (
+        <section className="max-w-7xl mx-auto p-4 sm:p-0 mt-16">
+            <h2 className="text-center text-4xl font-impact uppercase text-red-500 mb-8 tracking-widest neon-text-red border-b-4 border-red-800/50 pb-2">
+                OPERATIONAL THEATRE MAP // LIVE ENGAGEMENT GRID
+            </h2>
+            <div 
+                ref={containerRef}
+                className="glass-terminal glass-terminal-strong h-[600px] w-full rounded-xl border-4 border-red-700 shadow-2xl shadow-red-900/50 relative overflow-hidden flex items-center justify-center pulse-shadow-red"
+            >
+                {isLoading && (
+                    <div className="text-white text-lg font-mono-code neon-text-red">
+                        <ZapIcon className="w-8 h-8 inline-block animate-spin-slow mr-3 neon-glow"/>
+                        INITIATING 3D RENDER ENGINE...
+                    </div>
+                )}
+                {/* Canvas mount point */}
+                <div ref={mountRef} className="w-full h-full"></div>
+                
+                <div className="absolute top-4 right-4 p-3 bg-black/70 border border-red-700/50 rounded-lg text-sm font-mono-code text-gray-300">
+                    <p className="text-red-400 neon-text-red">STATUS: FULL GEOSPATIAL LOCK</p>
+                    <p className="text-xs text-gray-500">Drag mouse to alter viewing angle.</p>
+                </div>
+            </div>
+        </section>
+    );
+};
+
+
+// --- Directive Card Component (Now uses Parallax Hook) ---
+const DirectiveCard = ({ directive }) => {
+    const { title, subtitle, content, target, IconComponent, id } = directive;
+    const { ref, style, handleMouseMove, handleMouseLeave } = useParallax(15); // Increased parallax strength
+
+    return (
+        <div 
+            ref={ref}
+            style={style}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+            className="glass-terminal relative rounded-xl overflow-hidden p-6 sm:p-8 transition-all duration-300 shadow-xl shadow-red-900/50 hover:shadow-red-500/80 transform-gpu perspective-container pulse-shadow-red"
+        >
+            <div className="absolute inset-0 rounded-xl inner-reflection pointer-events-none z-0"></div>
+            <div className="relative z-10 flex items-center justify-between border-b-2 border-red-600 pb-3 mb-4 transition-transform duration-300" 
+                 style={{ transform: 'translate3d(var(--tx), var(--ty), 0)' }}>
+                <div className="flex items-center">
+                    <IconComponent className="text-red-500 w-8 h-8 mr-3 neon-glow drop-shadow-xl" />
+                    <h3 className="text-xl font-mono-code uppercase font-bold text-gray-100 tracking-wider neon-text-red">
+                        DIRECTIVE 0{id}
+                    </h3>
+                </div>
+                <span className="text-xs font-mono-code text-red-300 bg-red-900/80 px-3 py-1 rounded-full border border-red-700/50">
+                    {subtitle}
+                </span>
+            </div>
+            <h4 className="relative z-10 text-3xl font-impact text-white mb-4 leading-tight neon-text-white">{title}</h4>
+            <p className="relative z-10 text-sm text-gray-400 mb-4">
+                {renderContent(content)}
+            </p>
+            <div className="relative z-10 mt-4 pt-3 border-t-2 border-red-800/50 transition-transform duration-300"
+                 style={{ transform: 'translate3d(calc(var(--tx) * 0.5), calc(var(--ty) * 0.5), 0)' }}>
+                <p className="text-xs font-mono-code text-green-400">
+                    <span className="text-red-500 font-bold neon-text-red">&gt; TARGET:</span> {target} <CheckCircleIcon className="w-3 h-3 inline-block ml-1 neon-glow-green" />
+                </p>
+            </div>
+        </div>
+    );
+};
+
+// --- Operations Briefing Component ---
+const OperationsBriefing = () => (
+    <section className="mt-20 mb-20 max-w-6xl mx-auto p-4 sm:p-0">
+        <h2 className="text-center text-4xl font-impact uppercase text-red-500 mb-10 tracking-widest neon-text-red border-b-4 border-red-800/50 pb-2">
+            OPERATIONS BRIEFING: WHY BLACKSTONE?
+        </h2>
+
+        <div className="glass-terminal p-8 sm:p-12 mb-16 shadow-xl shadow-red-900/30 inner-reflection pulse-shadow-red">
+            <h3 className="text-3xl font-impact text-white mb-4 leading-tight neon-text-white">
+                DIRECT HIRING SOLUTIONS: TAILORED FOR RAPID ENGAGEMENT
+            </h3>
+            <p className="text-lg text-gray-400 font-mono-code leading-relaxed">
+                Blackstone’s direct hiring solutions and services are precision-engineered to suit the critical labor requirements of businesses needing immediate, high-caliber personnel for full-time or part-time assignments. We remain adaptable to your firm’s requirements, often deploying resources with minimal lead time.
+            </p>
+            <p className="text-lg text-gray-400 font-mono-code leading-relaxed mt-4">
+                Choose Blackstone Contractor Solutions to streamline your recruiting, hiring, training, and payroll processes. We identify and deploy ideal staffing solutions tailored to your unique threat profile and operational needs. {renderContent("We test the system under load **before full integration** to eliminate performance liabilities.", "text-green-300 neon-text-green")}
+            </p>
+            <button className="mt-6 px-6 py-3 bg-red-700/90 text-white text-sm font-mono-code uppercase rounded hover:bg-red-600 transition duration-300 flex items-center shadow-[0_0_15px_rgba(220,38,38,0.7)] group">
+                INITIATE ACCESS PROTOCOL <ArrowRightIcon className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+            </button>
+        </div>
+
+        <h3 className="text-center text-3xl font-impact uppercase text-gray-200 mb-8 tracking-widest neon-text-white">
+            SERVICE DEPLOYMENT MODULES
+        </h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {pageTwoServices.map((service, index) => ( 
+                <div key={index} className="glass-terminal p-6 rounded-xl border-t-4 border-red-700/50 hover:border-red-500 transition-all duration-500 perspective-container transform-gpu hover:translate-y-[-5px] hover:shadow-2xl hover:shadow-red-900/80 inner-reflection">
+                    <ZapIcon className="text-green-400 w-8 h-8 mb-4 neon-glow-green" />
+                    <h4 className="text-xl font-impact uppercase text-white mb-2 leading-tight neon-text-white">
+                        {service.title}
+                    </h4>
+                    <p className="text-xs font-mono-code text-red-500 mb-3 border-b border-red-900/50 pb-1 neon-text-red">
+                        &gt; {service.directive}
+                    </p>
+                    <p className="text-sm text-gray-400">
+                        {renderContent(service.summary, "text-green-300 neon-text-green")}
+                    </p>
+                </div>
+            ))}
+        </div>
+    </section>
+);
+
+
+// --- Hero Section Component ---
+const HeroSection = () => {
+    const imageUrl = "https://placehold.co/1920x800/000000/dc2626?text=BLACKSTONE+CONTROL+GRID";
+
+    return (
+        <section 
+            className="relative h-[80vh] min-h-[600px] w-full mb-20 flex items-center justify-center overflow-hidden"
+            style={{ backgroundImage: `url(${imageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+        >
+            <div className="absolute inset-0 bg-gray-950/90 backdrop-blur-xl z-10"></div> {/* Increased darkness and blur */}
+            <div className="absolute inset-0 z-20 overflow-hidden">
+                <div className="scan-line-v w-full h-[5px] bg-red-700/50 absolute top-0 animate-[scan-line_4s_linear_infinite]"></div> {/* Faster scan line */}
+            </div>
+
+            <div className="relative z-30 max-w-5xl w-full p-8 sm:p-12 glass-terminal glass-terminal-strong text-center inner-reflection border-4 border-red-600 shadow-2xl shadow-red-900/90">
+                <h1 className="text-8xl sm:text-9xl font-impact tracking-tighter uppercase text-red-700 drop-shadow-2xl glitch-text">
+                    BLACKSTONE
+                </h1>
+                <p className="text-4xl sm:text-5xl font-impact uppercase text-gray-50 mt-4 tracking-[.3em] border-b-4 border-red-700 pb-2 inline-block neon-text-white drop-shadow-xl">
+                    HR COMMAND
+                </p>
+
+                <div className="mt-8 pt-4 border-t border-red-600">
+                    <h2 className="text-xl sm:text-3xl font-mono-code text-green-400 neon-text-green">
+                        // CORE DIRECTIVE
+                    </h2>
+                    <p className="text-2xl sm:text-4xl font-impact uppercase text-white mt-2 tracking-wide leading-tight">
+                        WE DON'T MANAGE RISK. <span className="text-red-500 neon-text-red">WE ERADICATE IT.</span>
+                    </p>
+                    <p className="text-sm font-mono-code text-gray-400 mt-4">
+                        STATUS: FORTRESS ONLINE. ALL SYSTEMS OPTIMIZED. ADHERE.
+                    </p>
+                </div>
+            </div>
+        </section>
+    );
+};
+
+// --- Call-to-Action/Contact Section (The Nexus) Component ---
+const ContactSection = () => (
+    <section className="mt-20 mb-8 max-w-4xl mx-auto">
+        <div className="glass-terminal p-8 sm:p-12 rounded-xl border-4 border-red-500 shadow-2xl shadow-red-900/90 animate-pulse-slow inner-reflection pulse-shadow-red">
+            <div className="flex items-center justify-center mb-4">
+                <ZapIcon className="text-red-500 w-12 h-12 mr-4 neon-glow" />
+                <h2 className="text-6xl font-impact uppercase text-white tracking-tighter neon-text-white">
+                    INITIATE COMMAND
+                </h2>
+            </div>
+            <p className="text-center text-lg font-mono-code text-gray-400 mb-8">
+                Deployment cannot wait. Access the network immediately to secure labor and compliance.
+            </p>
+            
+            <button className="w-full flex items-center justify-center p-4 rounded-lg bg-red-700 text-white font-impact uppercase tracking-widest text-xl transition-all duration-300 hover:bg-red-600 shadow-[0_0_20px_rgba(220,38,38,0.9)] hover:shadow-red-500/90 group border-2 border-red-400">
+                SUBMIT DIRECTIVE
+                <ArrowRightIcon className="w-6 h-6 ml-4 transition-transform duration-300 group-hover:translate-x-3" />
+            </button>
+        </div>
+    </section>
+);
+
+
+// --- Main Application Component ---
+const App = () => {
+    const [currentPage, setCurrentPage] = useState('briefing');
+    
+    // Custom CSS for fonts and animation keyframes
+    const customStyles = `
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@900&family=Roboto+Mono:wght@700&display=swap');
+        .font-impact { font-family: 'Montserrat', sans-serif; }
+        .font-mono-code { font-family: 'Roboto Mono', monospace; }
+
+        /* General Effects */
+        .perspective-container { perspective: 1500px; } /* Increased perspective */
+        .neon-glow { filter: drop-shadow(0 0 8px rgba(220, 38, 38, 1)) drop-shadow(0 0 15px rgba(220, 38, 38, 0.7)); } /* Stronger red glow */
+        .neon-glow-green { filter: drop-shadow(0 0 8px rgba(74, 222, 128, 1)) drop-shadow(0 0 15px rgba(74, 222, 128, 0.7)); } /* Stronger green glow */
+        .neon-text-red { text-shadow: 0 0 4px #dc2626, 0 0 12px #ef4444, 0 0 20px rgba(220, 38, 38, 0.5); } /* Enhanced text glow */
+        .neon-text-white { text-shadow: 0 0 3px #ffffff, 0 0 8px #fef2f2, 0 0 15px rgba(255, 255, 255, 0.3); }
+        .neon-text-green { text-shadow: 0 0 3px #4ade80, 0 0 8px #86efac; }
+        .glass-terminal {
+            background-color: rgba(0, 0, 0, 0.7); /* Darker interior */
+            backdrop-filter: blur(20px); /* More blur */
+            border: 3px solid rgba(220, 38, 38, 0.4); /* Defined red border */
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.9), 0 0 80px rgba(220, 38, 38, 0.6); /* Deeper main shadow */
+            transition: all 0.5s ease-in-out;
+            position: relative; /* Needed for internal background effects */
+        }
+        .inner-reflection {
+            box-shadow: inset 0 0 30px rgba(220, 38, 38, 0.3), inset 0 0 80px rgba(0, 0, 0, 1); /* Deeper inner shadow */
+            background: radial-gradient(circle at 10% 10%, rgba(255, 255, 255, 0.15) 0%, transparent 50%); /* Stronger specular highlight */
+        }
+        .shadow-inner-dark {
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8);
+        }
+
+        .grid-background {
+            background-color: #050505; /* Blacker base */
+            background-image: linear-gradient(0deg, transparent 24%, rgba(220, 38, 38, 0.08) 25%, rgba(220, 38, 38, 0.08) 26%, transparent 27%, transparent 74%, rgba(220, 38, 38, 0.08) 75%, rgba(220, 38, 38, 0.08) 76%, transparent 77%), linear-gradient(90deg, transparent 24%, rgba(220, 38, 38, 0.08) 25%, rgba(220, 38, 38, 0.08) 26%, transparent 27%, transparent 74%, rgba(220, 38, 38, 0.08) 75%, rgba(220, 38, 38, 0.08) 76%, transparent 77%);
+            background-size: 150px 150px; /* Larger grid pattern */
+        }
+        
+        /* Keyframes */
+        @keyframes pulse-slow { 0%, 100% { box-shadow: 0 0 30px rgba(220, 38, 38, 1), 0 0 60px rgba(220, 38, 38, 0.5); } 50% { box-shadow: 0 0 50px rgba(220, 38, 38, 1.2), 0 0 100px rgba(220, 38, 38, 0.8); } }
+        @keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
+        @keyframes scan-line { 0% { transform: translateY(-100%); opacity: 0; } 5% { opacity: 0.8; } 95% { opacity: 0.8; } 100% { transform: translateY(100%); opacity: 0; } }
+        @keyframes text-glitch {
+            0%, 100% { text-shadow: 3px 0 #dc2626, -3px 0 #3b82f6; }
+            10% { text-shadow: -3px 0 #dc2626, 3px 0 #3b82f6; }
+            15% { text-shadow: 0; }
+            20% { text-shadow: 3px 0 #dc2626, -3px 0 #3b82f6; }
+            25% { text-shadow: 0; }
+            30% { text-shadow: -3px 0 #dc2626, 3px 0 #3b82f6; }
+            50% { text-shadow: 0; }
+            70% { text-shadow: 3px 0 #dc2626, -3px 0 #3b82f6; }
+        }
+        @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        /* Animation Application */
+        .animate-pulse-slow { animation: pulse-slow 5s ease-in-out infinite; }
+        .animate-pulse-fast { animation: pulse-fast 2s ease-in-out infinite; }
+        .scan-line-v { animation: scan-line 4s linear infinite; }
+        .glitch-text { animation: text-glitch 5s linear infinite; }
+        .animate-spin-slow { animation: spin-slow 15s linear infinite; }
+
+        .pulse-shadow-red:hover {
+            box-shadow: 0 0 30px rgba(220, 38, 38, 1), 0 0 80px rgba(220, 38, 38, 0.7);
+        }
+    `;
+
+    const renderContent = () => {
+        switch (currentPage) {
+            case 'briefing':
+                return (
+                    <>
+                        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 p-4 -mt-16 relative z-40">
+                            {directives.map(directive => (
+                                <DirectiveCard key={directive.id} directive={directive} />
+                            ))}
+                        </div>
+                        <KeyPerformanceIndicators />
+                        <OperationsBriefing />
+                    </>
+                );
+            case 'systemMap':
+                return <SystemMap />;
+            case 'settings':
+                return (
+                    <div className="p-8 bg-black/70 rounded-xl glass-terminal shadow-lg max-w-xl mx-auto pulse-shadow-red">
+                        <h2 className="text-3xl font-impact text-red-500 neon-text-red">SYSTEM CONFIG</h2>
+                        <p className="mt-4 text-gray-400 font-mono-code">
+                            // USER ACCESS LEVEL: <span className='text-green-400 neon-text-green'>MAXIMUM</span>
+                        </p>
+                        <p className="mt-2 text-gray-400 font-mono-code">
+                            // PROTOCOLS: <span className='text-yellow-400'>STATIC</span> (Locked by Master Command)
+                        </p>
+                        <p className="mt-4 text-sm text-gray-500 border-t border-red-900 pt-3">
+                            Unauthorized configuration changes will trigger a Level 5 security alert.
+                        </p>
+                    </div>
+                );
+            default:
+                return <OperationsBriefing />;
+        }
+    };
+
+    return (
+        <>
+            {/* Load Three.js library */}
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+            {/* Inject Custom Styles */}
+            <style>{customStyles}</style>
+
+            <div className="min-h-screen grid-background">
+
+                {/* --- 0. Global Command Nexus (Hero Section) --- */}
+                <HeroSection />
+
+                {/* --- Navigation Bar (Command Console) --- */}
+                <header className="flex justify-center sticky top-0 z-50 mb-8 bg-gray-950/90 backdrop-blur-md shadow-2xl shadow-black/80 py-4 border-b-4 border-red-700/80">
+                    <nav className="flex space-x-6 p-2 glass-terminal rounded-full border-red-500/50">
+                        {['briefing', 'systemMap', 'settings'].map(page => (
+                            <button
+                                key={page}
+                                onClick={() => setCurrentPage(page)}
+                                className={`px-8 py-3 text-base font-mono-code uppercase rounded-full transition duration-150 shadow-lg ${
+                                    currentPage === page
+                                        ? 'bg-red-700 text-white neon-glow shadow-red-500/80 border-2 border-red-400'
+                                        : 'text-gray-300 hover:bg-red-900/60 hover:text-red-300 border-2 border-transparent'
+                                }`}
+                            >
+                                {page.replace('systemMap', 'System Map')}
+                            </button>
+                        ))}
+                    </nav>
+                </header>
+
+                <main className="max-w-7xl mx-auto pb-20">
+                    {renderContent()}
+                </main>
+
+                {/* --- 4. Call-to-Action / The Nexus --- */}
+                <ContactSection />
+
+                {/* --- Footer --- */}
+                <footer className="text-center mt-4 pt-4 pb-4 bg-gray-950/90 border-t-4 border-red-800/80 shadow-[0_0_20px_rgba(220,38,38,0.2)]">
+                    <p className="text-xs font-mono-code text-gray-500 uppercase">
+                        OPERATIONAL FOOTPRINT: CANADA // BLACKSTONE HR COMMAND V6.0
+                    </p>
+                </footer>
+
+            </div>
+        </>
+    );
+};
+
+export default App;

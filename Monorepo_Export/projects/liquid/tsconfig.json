@@ -1,0 +1,34 @@
+{
+    "compilerOptions": {
+        "baseUrl": ".",
+        "paths": {
+            "@liquid/tokens": [
+                "./packages/tokens/src/index.ts"
+            ],
+            "@liquid/ui": [
+                "./packages/ui/src/index.ts"
+            ],
+            "@liquid/effects": [
+                "./packages/effects/src/index.ts"
+            ],
+            "@liquid/*": [
+                "./packages/*/src/index.ts"
+            ]
+        },
+        "moduleResolution": "node",
+        "module": "esnext",
+        "target": "esnext",
+        "jsx": "preserve",
+        "strict": false,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "lib": [
+            "dom",
+            "dom.iterable",
+            "esnext"
+        ]
+    },
+    "exclude": [
+        "node_modules"
+    ]
+}

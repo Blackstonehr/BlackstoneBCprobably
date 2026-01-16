@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+@source "../../packages/*/src/**/*.{ts,tsx}";
+
+@theme {
+  --color-midnight: #00050a;
+  --color-bonewhite: #E9DAC0;
+  --color-muted-surface: #0a0f14;
+}
+
+@layer base {
+  body {
+    @apply bg-midnight text-bonewhite antialiased selection:bg-bonewhite/20;
+    font-feature-settings: "ss01", "ss02", "cv01", "cv02";
+  }
+
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.04em;
+    line-height: 0.85;
+  }
+}

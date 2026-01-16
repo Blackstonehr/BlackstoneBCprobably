@@ -1,0 +1,103 @@
+import React, { useState } from 'react';
+import { 
+  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
+} from 'recharts';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronDown, Shield, TrendingUp, Users, AlertTriangle, BarChart2 } from 'lucide-react';
+
+// --- CSS for Custom Animations (Siren & Electric Line) ---
+// These styles implement the rotating light and the moving energy line
+const customStyles = `
+  @keyframes spin-slow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  @keyframes electricity-flow {
+    from { stroke-dashoffset: 24; }
+    to { stroke-dashoffset: 0; }
+  }
+  /* The Rotating Siren Light Effect */
+  .siren-sweep {
+    background: conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(136, 19, 55, 0.4) 40deg, transparent 90deg);
+    animation: spin-slow 6s linear infinite;
+    filter: blur(40px);
+  }
+  /* The Electric Line Class targeted by Recharts (The "Moving Line") */
+  .electric-line path {
+    stroke-dasharray: 12 6; /* Dashed line for electric effect */
+    animation: electricity-flow 1s linear infinite; /* Movement along the line */
+    filter: drop-shadow(0 0 5px #fb7185) drop-shadow(0 0 10px #be123c); /* Neon Glow */
+    stroke-linecap: round;
+  }
+`;
+
+// --- Operational Timeline Data (Adapted to Business Services Narrative) ---
+const data = [
+  { hour: '06:00', incidents: 5, service_tickets: 120 },
+  { hour: '09:00', incidents: 8, service_tickets: 185 },
+  { hour: '12:00', incidents: 12, service_tickets: 350 },
+  { hour: '15:00', incidents: 7, service_tickets: 240 },
+  { hour: '18:00', incidents: 10, service_tickets: 300 },
+  { hour: '21:00', incidents: 4, service_tickets: 150 },
+  { hour: '23:59', incidents: 2, service_tickets: 90 },
+];
+
+// --- Theme Constants ---
+const BURGUNDY_HEX = '#881337'; // rose-900
+const LIGHT_RED_HEX = '#fb7185'; // rose-400
+const NEON_WHITE = '#ffe4e6'; // rose-50
+
+// Renamed the component to 'App' as it serves as the entire page view
+const App = () => {
+  const [graphType, setGraphType] = useState('line'); // 'line' or 'bar'
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  const handleSelect = (type) => {
+    setGraphType(type);
+    setIsDropdownOpen(false);
+  };
+
+  return (
+    <>
+      <style>{customStyles}</style>
+      {/* Ensures the component fills the entire viewport, establishing the page theme */}
+      <div className="min-h-screen w-full bg-black flex items-center justify-center p-4 md:p-8 font-sans text-neutral-200 selection:bg-rose-900 selection:text-white overflow-y-auto">
+        
+        {/* MAIN CARD CONTAINER */}
+        <div className="
+          relative w-full max-w-4xl 
+          rounded-3xl 
+          bg-neutral-950/80 backdrop-blur-xl 
+          border border-rose-900/40
+          shadow-[0_0_50px_-10px_rgba(136,19,55,0.3)]
+          group
+          overflow-hidden
+        ">
+          
+          {/* --- EFFECT LAYERS --- */}
+          
+          {/* 1. The Rotating Siren Light (Behind content) */}
+          <div className="absolute inset-[-50%] siren-sweep opacity-30 pointer-events-none z-0" />
+
+          {/* 2. Static Vignette to keep corners dark */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.8)_100%)] pointer-events-none z-0" />
+
+          {/* 3. Top Gloss Reflection */}
+          <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-rose-400/50 to-transparent z-20" />
+
+          {/* CONTENT WRAPPER */}
+          <div className="relative z-10 p-6 md:p-8 flex flex-col gap-6">
+            
+            {/* HEADER */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div>
+                <div className="flex items-center gap-3 mb-1">
+                  <div className="relative p-2 rounded-lg bg-black border border-rose-800 shadow-[0_0_15px_rgba(225,29,72,0.3)]">
+                    <Shield size={18} className="text-rose-500" />
+                    <div className="absolute inset-0 rounded-lg animate-pulse bg-rose-500/10" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold tracking-tight text-white drop-shadow-md">
+                      BLACKSTONE<span className="text-rose-500">_OP_GRID</span>
+                    </h2>
+                    <p className="text-xs text-neutral-500 mt-1">Real-time Service Delivery Metrics</p>
