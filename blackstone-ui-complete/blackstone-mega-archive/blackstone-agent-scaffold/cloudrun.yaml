@@ -1,0 +1,17 @@
+
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: blackstone-agent
+  namespace: default
+spec:
+  template:
+    spec:
+      containers:
+        - image: gcr.io/YOUR_PROJECT_ID/blackstone-agent:latest
+          env:
+            - name: GOOGLE_PROJECT_ID
+              value: "YOUR_PROJECT_ID"
+            - name: OPENAI_API_KEY
+              value: "YOUR_OPENAI_KEY"
+      serviceAccountName: blackstone-agent-sa
